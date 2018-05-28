@@ -17,7 +17,7 @@ class App extends Component {
       storageValue: 0,
       web3: null,
       event: {
-        title: 'hello'
+        title: 'Loading...'
       }
     };
   }
@@ -117,7 +117,16 @@ class App extends Component {
           <div className="pure-g">
             <div className="pure-u-1-1">
               <h1>{this.state.event.title}</h1>
-              <p>Your Truffle Box is installed and ready.</p>
+              <p>
+                {this.state.event.resolutionDate &&
+                  this.state.event.resolutionDate}
+              </p>
+              <ul>
+                {this.state.event.outcomes &&
+                  this.state.event.outcomes.map(item => (
+                    <li key={item}>{item}</li>
+                  ))}
+              </ul>
               <h2>Smart Contract Example</h2>
               <p>
                 If your contracts compiled and migrated successfully, below will
