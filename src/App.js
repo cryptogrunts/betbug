@@ -16,6 +16,7 @@ class App extends Component {
     this.state = {
       storageValue: 0,
       web3: null,
+      oracle: null,
       event: {
         title: 'Loading...'
       }
@@ -104,24 +105,27 @@ class App extends Component {
     );
     this.setState({ hash: ipfsHash });
   };
-  createBet = async event => {
+  createOracle = async event => {
     event.preventDefault();
 
     const depositValue = 100000;
-    let oracle, market;
+    let oracle;
     console.log('creating oracle...');
     const gnosis = await Gnosis.create();
     console.log('ipfs hash is', this.state.hash);
     oracle = await gnosis.createCentralizedOracle(this.state.hash);
     console.info(`Oracle created with address ${oracle.address}`);
     this.setState({ oracle });
+  };
+  createEvent = async event => {
+    event.preventDefault;
     console.log('firing categorical event....');
+    let oracle = this.state.oracle;
 
     const categoryEvent = await gnosis.createCategoricalEvent({
       collateralToken: gnosis.etherToken,
       oracle,
-      // Note the outcomeCount must match the length of the outcomes array published on IPFS
-      outcomeCount: 3
+      outcomeCount: 2
     });
     console.info(
       `Categorical event created with address ${categoryEvent.address}`
@@ -151,9 +155,14 @@ class App extends Component {
                     <li key={item}>{item}</li>
                   ))}
               </ul>
-              <button onClick={this.createBet} type="primary">
-                Create Bet
+              <button onClick={this.createOracle} type="primary">
+                Create Oracle
               </button>
+              <div>
+                <button onClick={this.createEvent} type="primary">
+                  Create Event
+                </button>
+              </div>
               <h2>Smart Contract Example</h2>
               <p>
                 If your contracts compiled and migrated successfully, below will
