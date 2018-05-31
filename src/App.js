@@ -107,8 +107,6 @@ class App extends Component {
   };
   createOracle = async event => {
     event.preventDefault();
-
-    const depositValue = 100000;
     let oracle;
     console.log('creating oracle...');
     const gnosis = await Gnosis.create();
@@ -117,10 +115,12 @@ class App extends Component {
     console.info(`Oracle created with address ${oracle.address}`);
     this.setState({ oracle });
   };
+
   createEvent = async event => {
-    event.preventDefault;
+    event.preventDefault();
     console.log('firing categorical event....');
     let oracle = this.state.oracle;
+    const depositValue = 100000;
 
     const categoryEvent = await gnosis.createCategoricalEvent({
       collateralToken: gnosis.etherToken,
@@ -130,6 +130,164 @@ class App extends Component {
     console.info(
       `Categorical event created with address ${categoryEvent.address}`
     );
+    this.setState({ categoryEvent });
+    console.log('event is', categoryEvent);
+
+    // What im experimenting with today
+    // here I'm basically trying to improt tx results into the same contract
+    console.log('getting tx results ..... ');
+    const txResults = await Promise.all(
+      [
+        [
+          gnosis.etherToken.constructor,
+          await gnosis.etherToken.deposit.sendTransaction({
+            value: depositValue
+          })
+        ],
+        [
+          gnosis.etherToken.constructor,
+          await gnosis.etherToken.approve.sendTransaction(
+            categoryEvent.address,
+            depositValue
+          )
+        ],
+        [
+          categoryEvent.constructor,
+          await categoryEvent.buyAllOutcomes.sendTransaction(depositValue)
+        ]
+      ].map(([contract, txHash]) => contract.syncTransaction(txHash))
+    );
+
+    // Make sure everything worked
+    const expectedEvents = ['Deposit', 'Approval', 'OutcomeTokenSetIssuance'];
+    txResults.forEach((txResult, i) => {
+      Gnosis.requireEventFromTXResult(txResult, expectedEvents[i]);
+    });
+    console.log('txResult', txResults);
+
+    console.log('Checking bet balance ...');
+
+    const { Token } = gnosis.contracts;
+    const outcomeCount = (await categoryEvent.getOutcomeCount()).valueOf();
+    console.log('Outcome count is', outcomeCount);
+    for (let i = 0; i < outcomeCount; i++) {
+      const outcomeToken = await Token.at(await categoryEvent.outcomeTokens(i));
+      console.log(
+        'Have',
+        (await outcomeToken.balanceOf(gnosis.defaultAccount)).valueOf(),
+        'units of outcome',
+        i
+      );
+    }
+  };
+
+  createMarket = async event => {
+    event.preventDefault();
+    let market;
+    const gnosis = await Gnosis.create();
+
+    const categoryEvent = this.state.categoryEvent;
+    console.log('creating market ..');
+    market = await gnosis.createMarket({
+      event: categoryEvent.address,
+      marketMaker: gnosis.lmsrMarketMaker,
+      fee: 50000
+      // signifies a 5% fee on transactions
+      // see docs at Gnosis.createMarket (api-reference.html#createMarket) for more info
+    });
+    console.info(`Market created with address ${market.address}`);
+    this.setState({ market });
+    //Funding market with 4 eth to provide liquidity. There is a bounded loss the market maker can expect via LMSR function
+    const txResults = await Promise.all(
+      [
+        [
+          gnosis.etherToken.constructor,
+          await gnosis.etherToken.deposit.sendTransaction({ value: 4e18 })
+        ],
+        [
+          gnosis.etherToken.constructor,
+          await gnosis.etherToken.approve.sendTransaction(market.address, 4e18)
+        ],
+        [market.constructor, await market.fund.sendTransaction(4e18)]
+      ].map(([contract, txHash]) => contract.syncTransaction(txHash))
+    );
+
+    const expectedEvents = ['Deposit', 'Approval', 'MarketFunding'];
+    txResults.forEach((txResult, i) => {
+      Gnosis.requireEventFromTXResult(txResult, expectedEvents[i]);
+    });
+    console.log('expected events', txResults);
+  };
+
+  calcCost = async event => {
+    event.preventDefault();
+    const market = this.state.market;
+    const gnosis = await Gnosis.create();
+    console.log('LMSR  cost...');
+    const cost = await gnosis.lmsrMarketMaker.calcCost(market.address, 1, 1e17);
+    console.info(
+      `Buy 1 Outcome Token with index 1 costs ${cost.valueOf() /
+        1e187} ETH tokens`
+    );
+  };
+  calcProfit = async event => {
+    event.preventDefault();
+    const marketAddress = this.state.market.address;
+
+    const profit = await gnosis.lmsrMarketMaker.calcProfit(
+      marketAddress,
+      1,
+      1e18
+    );
+    console.info(
+      `Sell 1 Outcome Token with index 1 gives ${profit.valueOf() /
+        1e18} ETH tokens of profit`
+    );
+  };
+
+  buyTokens = async event => {
+    event.preventDefault();
+    const { market } = this.state;
+    const gnosis = await Gnosis.create();
+    console.log('bet on outcome that we win ....');
+    await gnosis.buyOutcomeTokens({
+      market,
+      outcomeTokenIndex: 1,
+      outcomeTokenCount: 1e18
+    });
+    console.info('Bought 1 Outcome Token of Outcome with index 1');
+  };
+  sellTokens = async event => {
+    event.preventDefault();
+    const market = this.state.market;
+    const gnosis = await Gnosis.create();
+    await gnosis.sellOutcomeTokens({
+      market,
+      outcomeTokenIndex: 1,
+      outcomeTokenCount: 1e18
+    });
+  };
+  betResolve = async event => {
+    event.preventDefault();
+    const { categoryEvent } = this.state;
+    console.log('Resolving worst case scenario ...');
+    const gnosis = await Gnosis.create();
+
+    await gnosis.resolveEvent({ categoryEvent, outcome: 1 });
+  };
+
+  // owner of the market
+
+  closeAndWithdraw = async event => {
+    event.preventDefault();
+    const { market } = this.state;
+    async function closeAndWithdraw() {
+      Gnosis.requireEventFromTXResult(await market.close(), 'MarketClose');
+      Gnosis.requireEventFromTXResult(
+        await market.withdrawFees(),
+        'MarketFeeWithdrawal'
+      );
+    }
   };
 
   render() {
@@ -163,6 +321,37 @@ class App extends Component {
                   Create Event
                 </button>
               </div>
+              <div>
+                <button onClick={this.createMarket} type="primary">
+                  Create Market
+                </button>
+              </div>
+              <div>
+                <button onClick={this.calcCost} type="primary">
+                  Calculate cost
+                </button>
+              </div>
+              <div>
+                <button onClick={this.calcProfit} type="primary">
+                  Calculate Profit
+                </button>
+              </div>
+              <div>
+                <button onClick={this.buyTokens} type="primary">
+                  Buy Tokens
+                </button>
+              </div>
+              <div>
+                <button onClick={this.sellTokens} type="primary">
+                  Sell Tokens
+                </button>
+              </div>
+              <div>
+                <button onClick={this.betResolve} type="primary">
+                  Resolve
+                </button>
+              </div>
+
               <h2>Smart Contract Example</h2>
               <p>
                 If your contracts compiled and migrated successfully, below will
