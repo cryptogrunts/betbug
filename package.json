@@ -49,6 +49,9 @@
     "whatwg-fetch": "1.0.0"
   },
   "dependencies": {
+    "@gnosis.pm/pm-contracts": "^1.0.4",
+    "@gnosis.pm/pm-js": "^2.1.0",
+    "date-fns": "^1.29.0",
     "dotenv": "^2.0.0",
     "react": "^15.4.2",
     "react-dom": "^15.4.2"
