@@ -127,10 +127,12 @@ export const sellTokens = async () => {
   console.info('sold 1 Outcome Token of Outcome with index 1');
 };
 
-export const resolve = async indexOfCorrectAnswer => {
-  await gnosis.resolveEvent({ event, outcome: indexOfCorrectAnswer });
+export const resolve = async (categoryEvent, market) => {
+  await gnosis
+    .resolveEvent({ event: categoryEvent, outcome: 1 })
+    .catch(error => console.error(error));
 
-  // @dev withdraw
+  // @dev close and withdraw
   Gnosis.requireEventFromTXResult(await market.close(), 'MarketClose');
   Gnosis.requireEventFromTXResult(
     await market.withdrawFees(),
@@ -138,8 +140,8 @@ export const resolve = async indexOfCorrectAnswer => {
   );
 };
 
-export const withdrawWinnings = async () =>
+export const withdrawWinnings = async categoryEvent =>
   Gnosis.requireEventFromTXResult(
-    await event.redeemWinnings(),
+    await categoryEvent.redeemWinnings(),
     'WinningsRedemption'
   );

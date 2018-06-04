@@ -24,29 +24,6 @@ class App extends Component {
     profit: null
   };
 
-  // betResolve = async event => {
-  //   event.preventDefault();
-  //   const { categoryEvent } = this.state;
-  //   console.log('Resolving worst case scenario ...');
-  //   const gnosis = await Gnosis.create();
-
-  //   await gnosis.resolveEvent({ categoryEvent, outcome: 1 });
-  // };
-
-  // owner of the market
-
-  // closeAndWithdraw = async event => {
-  //   event.preventDefault();
-  //   const { market } = this.state;
-  //   async function closeAndWithdraw() {
-  //     Gnosis.requireEventFromTXResult(await market.close(), 'MarketClose');
-  //     Gnosis.requireEventFromTXResult(
-  //       await market.withdrawFees(),
-  //       'MarketFeeWithdrawal'
-  //     );
-  //   }
-  // };
-
   handleChange = (field, value) => {
     let event = { ...this.state.event };
     event[field] = value;
@@ -58,7 +35,10 @@ class App extends Component {
     await createDescription(title, deadline)
       .then(hash => createOracle(hash))
       .then(oracle => createEvent(oracle))
-      .then(categoryEvent => createMarket(categoryEvent))
+      .then(categoryEvent => {
+        this.setState({ categoryEvent });
+        return createMarket(categoryEvent);
+      })
       .then(market => {
         this.setState({ market });
         this.calcBuyAndSell(market);
@@ -68,7 +48,6 @@ class App extends Component {
   };
 
   calcBuyAndSell = market => {
-    console.log('pog');
     calcCost(market).then(cost => this.setState({ cost }));
     calcProfit(market).then(profit => this.setState({ profit }));
   };
@@ -174,11 +153,19 @@ class App extends Component {
               )}
 
               <div>
-                <button onClick={resolve(1)} type="primary">
+                <button
+                  onClick={() =>
+                    resolve(this.state.categoryEvent, this.state.market)
+                  }
+                  type="primary"
+                >
                   Resolve
                 </button>
 
-                <button onClick={withdrawWinnings()} type="primary">
+                <button
+                  onClick={() => withdrawWinnings(this.state.categoryEvent)}
+                  type="primary"
+                >
                   Withdraw Winnings
                 </button>
               </div>
