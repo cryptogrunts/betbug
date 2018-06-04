@@ -110,7 +110,7 @@ export const buyTokens = async () => {
   await gnosis.buyOutcomeTokens({
     market,
     outcomeTokenIndex: 1,
-    outcomeTokenCount: 1e18
+    outcomeTokenCount: 1000
   });
   console.info('Bought 1 Outcome Token of Outcome with index 1');
 };
@@ -119,7 +119,7 @@ export const sellTokens = async () => {
   await gnosis.sellOutcomeTokens({
     market,
     outcomeTokenIndex: 1,
-    outcomeTokenCount: 1e18
+    outcomeTokenCount: 1000
   });
   console.info('sold 1 Outcome Token of Outcome with index 1');
 };
