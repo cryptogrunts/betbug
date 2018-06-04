@@ -1,4 +1,5 @@
 import Gnosis from '@gnosis.pm/pm-js';
+
 let gnosis, ipfsHash, market;
 
 export const createDescription = async (title, resolutionDate) => {
@@ -92,8 +93,10 @@ export const createMarket = async categoryEvent => {
   );
 
   const expectedEvents = ['Deposit', 'Approval', 'MarketFunding'];
+
   txResults.forEach((txResult, i) => {
     Gnosis.requireEventFromTXResult(txResult, expectedEvents[i]);
+    console.log('txResult', txResult);
   });
 
   return market;
@@ -110,7 +113,7 @@ export const buyTokens = async () => {
   await gnosis.buyOutcomeTokens({
     market,
     outcomeTokenIndex: 1,
-    outcomeTokenCount: 1e18
+    outcomeTokenCount: 100
   });
   console.info('Bought 1 Outcome Token of Outcome with index 1');
 };
@@ -119,7 +122,24 @@ export const sellTokens = async () => {
   await gnosis.sellOutcomeTokens({
     market,
     outcomeTokenIndex: 1,
-    outcomeTokenCount: 1e18
+    outcomeTokenCount: 1000
   });
   console.info('sold 1 Outcome Token of Outcome with index 1');
 };
+
+export const resolve = async indexOfCorrectAnswer => {
+  await gnosis.resolveEvent({ event, outcome: indexOfCorrectAnswer });
+
+  // @dev withdraw
+  Gnosis.requireEventFromTXResult(await market.close(), 'MarketClose');
+  Gnosis.requireEventFromTXResult(
+    await market.withdrawFees(),
+    'MarketFeeWithdrawal'
+  );
+};
+
+export const withdrawWinnings = async () =>
+  Gnosis.requireEventFromTXResult(
+    await event.redeemWinnings(),
+    'WinningsRedemption'
+  );

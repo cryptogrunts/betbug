@@ -8,7 +8,9 @@ import {
   calcCost,
   calcProfit,
   buyTokens,
-  sellTokens
+  sellTokens,
+  resolve,
+  withdrawWinnings
 } from '../features/betForm/helpers';
 
 class App extends Component {
@@ -65,7 +67,8 @@ class App extends Component {
     this.setState({ loading: false });
   };
 
-  calcBuyAndSell = async market => {
+  calcBuyAndSell = market => {
+    console.log('pog');
     calcCost(market).then(cost => this.setState({ cost }));
     calcProfit(market).then(profit => this.setState({ profit }));
   };
@@ -141,7 +144,15 @@ class App extends Component {
                   <p
                   >{`Buy 1 Outcome Token with index 1 costs ${this.state.cost.valueOf() /
                     1e187} ETH tokens`}</p>
-                  <button onClick={() => buyTokens()}>Buy</button>
+                  <button
+                    onClick={() =>
+                      buyTokens().then(() =>
+                        this.calcBuyAndSell(this.state.market)
+                      )
+                    }
+                  >
+                    Buy
+                  </button>
                 </div>
               )}
 
@@ -150,19 +161,27 @@ class App extends Component {
                   <p
                   >{`Sell 1 Outcome Token with index 1 gives ${this.state.profit.valueOf() /
                     1e18} ETH tokens of profit`}</p>
-                  <button onClick={() => sellTokens()}>Sell</button>
+                  <button
+                    onClick={() =>
+                      sellTokens().then(() =>
+                        this.calcBuyAndSell(this.state.market)
+                      )
+                    }
+                  >
+                    Sell
+                  </button>
                 </div>
               )}
 
-              {/*
-          
-             
-             
               <div>
-                <button onClick={this.betResolve} type="primary">
+                <button onClick={resolve(1)} type="primary">
                   Resolve
                 </button>
-              </div> */}
+
+                <button onClick={withdrawWinnings()} type="primary">
+                  Withdraw Winnings
+                </button>
+              </div>
             </div>
           </div>
         </main>
