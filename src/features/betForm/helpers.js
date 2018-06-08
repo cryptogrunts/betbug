@@ -1,9 +1,13 @@
+// @ts-check
 import Gnosis from '@gnosis.pm/pm-js';
 
 let gnosis, ipfsHash, market;
 
+/**  @param {string} title */
+/**  @param {number} resolutionDate */
 export const createDescription = async (title, resolutionDate) => {
   gnosis = await Gnosis.create();
+  // gnosis = await Gnosis.create({ rinkby: window.web3.currentProvider });
   ipfsHash = await gnosis.publishEventDescription({
     title,
     resolutionDate,
@@ -13,6 +17,7 @@ export const createDescription = async (title, resolutionDate) => {
   return ipfsHash;
 };
 
+/**  @param {string} hash */
 export const createOracle = async hash =>
   await gnosis.createCentralizedOracle(hash);
 
@@ -82,13 +87,13 @@ export const createMarket = async categoryEvent => {
     [
       [
         gnosis.etherToken.constructor,
-        await gnosis.etherToken.deposit.sendTransaction({ value: 4e18 })
+        await gnosis.etherToken.deposit.sendTransaction({ value: 4e5 })
       ],
       [
         gnosis.etherToken.constructor,
-        await gnosis.etherToken.approve.sendTransaction(market.address, 4e18)
+        await gnosis.etherToken.approve.sendTransaction(market.address, 4e5)
       ],
-      [market.constructor, await market.fund.sendTransaction(4e18)]
+      [market.constructor, await market.fund.sendTransaction(4e5)]
     ].map(([contract, txHash]) => contract.syncTransaction(txHash))
   );
 

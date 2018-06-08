@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import '../css/root.css';
 import {
   createDescription,
@@ -13,7 +13,10 @@ import {
   withdrawWinnings
 } from '../features/betForm/helpers';
 
-class App extends Component {
+import Web3 from 'web3';
+import Gnosis from '@gnosis.pm/pm-js';
+
+class App extends PureComponent {
   state = {
     event: {
       title: '',
@@ -23,6 +26,19 @@ class App extends Component {
     cost: null,
     profit: null
   };
+
+  async componentDidMount() {
+    const gnosis = await Gnosis.create({
+      ethereum: window.web3.currentProvider
+    });
+    gnosis.lmsrMarketMaker
+      .calcCost('0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a', 1, 1e18)
+      .then(cost => this.setState({ cost }));
+
+    gnosis.lmsrMarketMaker
+      .calcProfit('0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a', 1, 1e18)
+      .then(profit => this.setState({ profit }));
+  }
 
   handleChange = (field, value) => {
     let event = { ...this.state.event };
