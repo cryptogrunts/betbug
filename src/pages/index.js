@@ -13,7 +13,6 @@ import {
   withdrawWinnings
 } from '../features/betForm/helpers';
 
-import Web3 from 'web3';
 import Gnosis from '@gnosis.pm/pm-js';
 
 class App extends PureComponent {
@@ -38,6 +37,17 @@ class App extends PureComponent {
     gnosis.lmsrMarketMaker
       .calcProfit('0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a', 1, 1e18)
       .then(profit => this.setState({ profit }));
+
+    const CategoricalEventArtifact = await gnosis.contracts.CategoricalEvent.at(
+      '0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a'
+    );
+
+    const eventWeb3Contract = await window.web3.eth.contract(
+      CategoricalEventArtifact.abi,
+      '0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a'
+    );
+
+    this.setState({ market: eventWeb3Contract });
   }
 
   handleChange = (field, value) => {
@@ -141,7 +151,7 @@ class App extends PureComponent {
                     1e187} ETH tokens`}</p>
                   <button
                     onClick={() =>
-                      buyTokens().then(() =>
+                      buyTokens(this.state.market).then(() =>
                         this.calcBuyAndSell(this.state.market)
                       )
                     }
@@ -158,7 +168,7 @@ class App extends PureComponent {
                     1e18} ETH tokens of profit`}</p>
                   <button
                     onClick={() =>
-                      sellTokens().then(() =>
+                      sellTokens(this.state.market).then(() =>
                         this.calcBuyAndSell(this.state.market)
                       )
                     }

@@ -114,18 +114,18 @@ export const calcCost = async currentMarket =>
 export const calcProfit = async currentMarket =>
   await gnosis.lmsrMarketMaker.calcProfit(currentMarket.address, 1, 1e18);
 
-export const buyTokens = async () => {
+export const buyTokens = async _market => {
   await gnosis.buyOutcomeTokens({
-    market,
+    market: _market,
     outcomeTokenIndex: 1,
     outcomeTokenCount: 100
   });
   console.info('Bought 1 Outcome Token of Outcome with index 1');
 };
 
-export const sellTokens = async () => {
+export const sellTokens = async _market => {
   await gnosis.sellOutcomeTokens({
-    market,
+    market: _market,
     outcomeTokenIndex: 1,
     outcomeTokenCount: 1000
   });
