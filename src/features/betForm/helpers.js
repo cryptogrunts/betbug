@@ -81,6 +81,7 @@ export const createMarket = async categoryEvent => {
     // signifies a 5% fee on transactions
     // see docs at Gnosis.createMarket (api-reference.html#createMarket) for more info
   });
+  console.log('the market address is ', market.address);
 
   //Funding market with 4 eth to provide liquidity. There is a bounded loss the market maker can expect via LMSR function
   const txResults = await Promise.all(

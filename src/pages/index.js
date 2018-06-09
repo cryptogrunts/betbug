@@ -13,7 +13,6 @@ import {
   withdrawWinnings
 } from '../features/betForm/helpers';
 
-import Web3 from 'web3';
 import Gnosis from '@gnosis.pm/pm-js';
 
 class App extends PureComponent {
@@ -22,6 +21,7 @@ class App extends PureComponent {
       title: '',
       resolutionDate: ''
     },
+    importedMarket: null,
     market: null,
     cost: null,
     profit: null
@@ -31,12 +31,20 @@ class App extends PureComponent {
     const gnosis = await Gnosis.create({
       ethereum: window.web3.currentProvider
     });
+    const importedMarket = await gnosis.contracts.Market.at(
+      '0xbE2c8e39734eCe4ec201d2106E04216c348E08b8'
+    );
+
+    console.log(await importedMarket.buy(0, 100, 1e20));
+
+    console.info('Bought 1 Outcome Token of Outcome with index 1');
+
     gnosis.lmsrMarketMaker
-      .calcCost('0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a', 1, 1e18)
+      .calcCost('0xbE2c8e39734eCe4ec201d2106E04216c348E08b8', 1, 1e18)
       .then(cost => this.setState({ cost }));
 
     gnosis.lmsrMarketMaker
-      .calcProfit('0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a', 1, 1e18)
+      .calcProfit('0xbE2c8e39734eCe4ec201d2106E04216c348E08b8', 1, 1e18)
       .then(profit => this.setState({ profit }));
   }
 
@@ -141,7 +149,7 @@ class App extends PureComponent {
                     1e187} ETH tokens`}</p>
                   <button
                     onClick={() =>
-                      buyTokens().then(() =>
+                      buyTokens(this.state.importedMarket).then(() =>
                         this.calcBuyAndSell(this.state.market)
                       )
                     }
