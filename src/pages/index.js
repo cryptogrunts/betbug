@@ -23,7 +23,8 @@ class App extends PureComponent {
     },
     importedMarket: null,
     market: null,
-    cost: null,
+    cost0: null,
+    cost1: null,
     profit: null
   };
 
@@ -31,34 +32,18 @@ class App extends PureComponent {
     const gnosis = await Gnosis.create({
       ethereum: window.web3.currentProvider
     });
-    const importedMarket = await gnosis.contracts.Market.at(
-      '0xbE2c8e39734eCe4ec201d2106E04216c348E08b8'
-    );
-
-    console.log(await importedMarket.buy(0, 100, 1e20));
-
-    console.info('Bought 1 Outcome Token of Outcome with index 1');
 
     gnosis.lmsrMarketMaker
+      .calcCost('0xbE2c8e39734eCe4ec201d2106E04216c348E08b8', 0, 1e18)
+      .then(cost0 => this.setState({ cost0 }));
+    gnosis.lmsrMarketMaker
       .calcCost('0xbE2c8e39734eCe4ec201d2106E04216c348E08b8', 1, 1e18)
-      .then(cost => this.setState({ cost }));
+      .then(cost1 => this.setState({ cost1 }));
 
     gnosis.lmsrMarketMaker
       .calcProfit('0xbE2c8e39734eCe4ec201d2106E04216c348E08b8', 1, 1e18)
       .then(profit => this.setState({ profit }));
-
-  //   const CategoricalEventArtifact = await gnosis.contracts.CategoricalEvent.at(
-  //     '0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a'
-  //   );
-
-  //   const eventWeb3Contract = await window.web3.eth.contract(
-  //     CategoricalEventArtifact.abi,
-  //     '0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a'
-  //   );
-
-  //   this.setState({ market: eventWeb3Contract });
-  // }
-
+  }
   handleChange = (field, value) => {
     let event = { ...this.state.event };
     event[field] = value;
@@ -80,6 +65,18 @@ class App extends PureComponent {
       })
       .catch(error => console.error(error));
     this.setState({ loading: false });
+  };
+
+  handleBuy = async e => {
+    const gnosis = await Gnosis.create({
+      ethereum: window.web3.currentProvider
+    });
+    const importedMarket = await gnosis.contracts.Market.at(
+      '0xbE2c8e39734eCe4ec201d2106E04216c348E08b8'
+    );
+
+    console.log(importedMarket);
+    await importedMarket.buy(e, 100000, 1e17);
   };
 
   calcBuyAndSell = market => {
@@ -153,20 +150,19 @@ class App extends PureComponent {
 
               {this.state.loading && <p>Creating your bet...</p>}
               <hr />
-              {this.state.cost && (
+              {this.state.cost0 && (
+                <div>
+                  <p>{`Do you bet for ?  costs ${this.state.cost0.valueOf() /
+                    1e187} ETH tokens `}</p>
+                  <button onClick={() => this.handleBuy(0)}>Bet For</button>
+                </div>
+              )}
+              {this.state.cost1 && (
                 <div>
                   <p
-                  >{`Buy 1 Outcome Token with index 1 costs ${this.state.cost.valueOf() /
-                    1e187} ETH tokens`}</p>
-                  <button
-                    onClick={() =>
-                      buyTokens(this.state.importedMarket).then(() =>
-                        this.calcBuyAndSell(this.state.market)
-                      )
-                    }
-                  >
-                    Buy
-                  </button>
+                  >{`Do you bet against ?  costs ${this.state.cost1.valueOf() /
+                    1e187} ETH tokens `}</p>
+                  <button onClick={() => this.handleBuy(1)}>Bet Against</button>
                 </div>
               )}
 
