@@ -46,7 +46,18 @@ class App extends PureComponent {
     gnosis.lmsrMarketMaker
       .calcProfit('0xbE2c8e39734eCe4ec201d2106E04216c348E08b8', 1, 1e18)
       .then(profit => this.setState({ profit }));
-  }
+
+  //   const CategoricalEventArtifact = await gnosis.contracts.CategoricalEvent.at(
+  //     '0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a'
+  //   );
+
+  //   const eventWeb3Contract = await window.web3.eth.contract(
+  //     CategoricalEventArtifact.abi,
+  //     '0xf21cCb9fC218b1636DE844b3852Ec9f9ED679B4a'
+  //   );
+
+  //   this.setState({ market: eventWeb3Contract });
+  // }
 
   handleChange = (field, value) => {
     let event = { ...this.state.event };
@@ -166,7 +177,7 @@ class App extends PureComponent {
                     1e18} ETH tokens of profit`}</p>
                   <button
                     onClick={() =>
-                      sellTokens().then(() =>
+                      sellTokens(this.state.market).then(() =>
                         this.calcBuyAndSell(this.state.market)
                       )
                     }
