@@ -3,7 +3,7 @@
 @import 'open-sans.css';
 @import 'oswald.css';
 @import 'pure-min.css';
-
+@import 'palette.css';
 body {
   margin: 0;
   padding: 0;

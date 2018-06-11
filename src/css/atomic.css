@@ -2,9 +2,17 @@
   display: block;
 }
 
+.dib {
+  display: inline-block;
+}
+
 .min-h5 {
   min-height: 5rem;
 }
 .mt3 {
   margin-top: 3rem;
+}
+
+.ml3 {
+  margin-left: 3rem;
 }
